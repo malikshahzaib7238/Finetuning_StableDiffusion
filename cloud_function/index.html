@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1f4037, #99f2c8);
+            color: #fff;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .form-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        input[type="text"] {
+            padding: 12px 15px;
+            width: 300px;
+            font-size: 1rem;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]::placeholder {
+            color: #ddd;
+        }
+
+        input[type="text"]:focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #99f2c8;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #1f4037;
+            background: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        button:hover {
+            background: #99f2c8;
+            transform: translateY(-3px);
+        }
+
+        #output {
+            margin-top: 40px;
+            max-width: 90%;
+        }
+
+        #loading {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            animation: blink 1.5s infinite;
+        }
+
+        img {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0.6;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>AI Image Generator</h1>
+    <p>Enter a prompt to see your imagination turn into reality!</p>
+    <div class="form-container">
+        <input type="text" id="prompt" placeholder="Describe the image...">
+        <button onclick="generateImage()">Generate</button>
+    </div>
+    <div id="output">
+        <p id="loading" style="display: none;">✨ Generating your masterpiece... ✨</p>
+        <img id="generatedImage" style="display: none;" alt="Generated Image">
+    </div>
+    <script>
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value;
+
+            if (!prompt) {
+                alert("Please enter a prompt.");
+                return;
+            }
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const response = await fetch('/serve', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+                console.log(response);
+                // Log the response status and check if it's successful
+                console.log('Response status:', response.status);
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Image generation successful:', result);
+
+                    // Log the entire result to verify its structure
+                    console.log('Result:', result);
+
+                    // Check if the 'image' key exists in the response
+                    if (result && result.image) {
+                        const base64Image = result.image;
+                        document.getElementById('generatedImage').src = `data:image/png;base64,${base64Image}`;
+                        document.getElementById('generatedImage').style.display = 'block';
+                    } else {
+                        console.error('No image data received in response.');
+                        alert('Failed to generate image: No image data received.');
+                    }
+                } else {
+                    console.error('Failed to generate image. Status code:', response.status);
+                    alert('Failed to generate the image. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error occurred while generating image:', error);
+                alert('An unexpected error occurred. Please try again later.');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>
